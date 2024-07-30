@@ -6,4 +6,5 @@
 
 ./java/lib/**
 ./cpp/lib/**
+./cpp/include/generated/**
 ./lib/**

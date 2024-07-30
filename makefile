@@ -1,21 +1,21 @@
 DEBUG=1
 
-ifeq ($(DEBUG), 1)
-CFLAGS=-O2 -std=c++20 -DDEBUG
+ifeq ($(OS), Windows_NT)
+	ARM_CC=C:\Users\Public\wpilib\2024\roborio\bin\arm-frc2024-linux-gnueabi-g++.exe
+	CC=g++.exe
+	FIND=C:/msys64/usr/bin/find.exe
+	CPP_SHARED_OUTPUT_x64=./lib/x64/Veer.dll
 else
-CFLAGS=-O2 -std=c++20
+	ARM_CC=arm-none-eabi-g++
+	CC=g++
+	FIND=/usr/bin/find
+	CPP_SHARED_OUTPUT_x64=./lib/x64/libVeer.so
 endif
 
-ifeq ($(OS), Windows_NT)
-ARM_CC=C:\Users\Public\wpilib\2024\roborio\bin\arm-frc2024-linux-gnueabi-g++.exe
-CC=g++.exe
-FIND=C:/msys64/usr/bin/find.exe
-CPP_SHARED_OUTPUT_x64=./lib/x64/Veer.dll
+ifeq ($(DEBUG), 1)
+	CFLAGS=-O2 -std=c++20 -DDEBUG -I$(CURDIR)/cpp/include/jni/
 else
-ARM_CC=arm-none-eabi-g++
-CC=g++
-FIND=/usr/bin/find
-CPP_SHARED_OUTPUT_x64=./lib/x64/libVeer.so
+	CFLAGS=-O2 -std=c++20 -I$(CURDIR)/cpp/include/jni/
 endif
 
 JAVA_SOURCES=$(shell $(FIND) ./java/src/ -name *.java)
@@ -44,7 +44,7 @@ $(CPP_OUTPUT_DIRS_x64):
 	jar cf $@ $(JAR_FILES)
 
 ./java/lib/%.class: ./java/src/%.java
-	javac -d ./java/lib/ $^
+	javac -d ./java/lib/ $^ -h ./cpp/include/generated/
 
 # Native arm build
 ./lib/arm/libVeer.so: $(CPP_OUTPUTS_arm)
@@ -66,6 +66,7 @@ clean:
 	rm -rf ./java/lib/**
 	rm -rf ./cpp/lib/arm/**
 	rm -rf ./cpp/lib/x64/**
+	rm -rf ./cpp/include/generated/**
 
 	rm -f ./lib/Veer.jar
 	rm -f ./lib/arm/libVeer.so
