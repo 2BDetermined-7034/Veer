@@ -1,21 +1,74 @@
-CC=arm-frc2024-linux-gnueabi-g++.exe
 DEBUG=1
-CFLAGS=-O2 -std=c++20
-FIND=C:/msys64/usr/bin/find.exe
 
-JAVA_SOURCES=$(shell $(FIND) ./java/ -name *.java)
+ifeq ($(DEBUG), 1)
+CFLAGS=-O2 -std=c++20 -DDEBUG
+else
+CFLAGS=-O2 -std=c++20
+endif
+
+ifeq ($(OS), Windows_NT)
+ARM_CC=C:\Users\Public\wpilib\2024\roborio\bin\arm-frc2024-linux-gnueabi-g++.exe
+CC=g++.exe
+FIND=C:/msys64/usr/bin/find.exe
+CPP_SHARED_OUTPUT_x64=./lib/x64/Veer.dll
+else
+ARM_CC=arm-none-eabi-g++
+CC=g++
+FIND=/usr/bin/find
+CPP_SHARED_OUTPUT_x64=./lib/x64/libVeer.so
+endif
+
+JAVA_SOURCES=$(shell $(FIND) ./java/src/ -name *.java)
 JAVA_OUTPUTS=$(JAVA_SOURCES:./java/src/%.java=./java/lib/%.class)
 JAR_FILES   =$(JAVA_OUTPUTS:./java/lib/%.class=-C ./java/lib %.class)
 
-default: ./lib/Veer.jar
+CPP_SOURCES    =$(shell $(FIND) ./cpp/src/ -name *.cpp)
+CPP_OUTPUTS_arm=$(CPP_SOURCES:./cpp/src/%.cpp=./cpp/lib/arm/%.o)
+CPP_OUTPUTS_x64=$(CPP_SOURCES:./cpp/src/%.cpp=./cpp/lib/x64/%.o)
 
+CPP_SOURCE_DIRS    =$(shell $(FIND) ./cpp/src/ -type d)
+CPP_OUTPUT_DIRS_arm=$(CPP_SOURCE_DIRS:./cpp/src/%=./cpp/lib/arm/%) ./lib/arm
+CPP_OUTPUT_DIRS_x64=$(CPP_SOURCE_DIRS:./cpp/src/%=./cpp/lib/x64/%) ./lib/x64
+
+default: $(CPP_OUTPUT_DIRS_arm) $(CPP_OUTPUT_DIRS_x64) ./lib/Veer.jar ./lib/arm/libVeer.so $(CPP_SHARED_OUTPUT_x64)
+
+# Subdirectory constructor
+$(CPP_OUTPUT_DIRS_arm):
+	mkdir -p $@
+
+$(CPP_OUTPUT_DIRS_x64):
+	mkdir -p $@
+
+# Java build
 ./lib/Veer.jar: $(JAVA_OUTPUTS)
 	jar cf $@ $(JAR_FILES)
 
 ./java/lib/%.class: ./java/src/%.java
 	javac -d ./java/lib/ $^
 
+# Native arm build
+./lib/arm/libVeer.so: $(CPP_OUTPUTS_arm)
+	$(ARM_CC) -shared $^ -o $@
+
+./cpp/lib/arm/%.o: ./cpp/src/%.cpp
+	$(ARM_CC) -c $(CFLAGS) $^ -o $@
+
+# Native x64 build
+$(CPP_SHARED_OUTPUT_x64): $(CPP_OUTPUTS_x64)
+	$(CC) -shared $^ -o $@
+
+./cpp/lib/x64/%.o: ./cpp/src/%.cpp
+	$(CC) -c $(CFLAGS) $^ -o $@
+
 .PHONY: clean
 clean:
-	rm ./lib/Veer.jar
+# Remove java and cpp outputs
 	rm -rf ./java/lib/**
+	rm -rf ./cpp/lib/arm/**
+	rm -rf ./cpp/lib/x64/**
+
+	rm -f ./lib/Veer.jar
+	rm -f ./lib/arm/libVeer.so
+# Remove both the GNU/Linux and Windows shared library variants without complaining
+	rm -f ./lib/x64/libVeer.so
+	rm -f ./lib/x64/Veer.dll

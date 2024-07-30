@@ -2,3 +2,8 @@
 *.so
 *.jar
 *.class
+*.dll
+
+./java/lib/**
+./cpp/lib/**
+./lib/**
