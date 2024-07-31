@@ -5,17 +5,19 @@ ifeq ($(OS), Windows_NT)
 	CC=g++.exe
 	FIND=C:/msys64/usr/bin/find.exe
 	CPP_SHARED_OUTPUT_x64=./lib/x64/Veer.dll
+	LDFLAGS=-Wl,--subsystem,windows
 else
 	ARM_CC=arm-none-eabi-g++
 	CC=g++
 	FIND=/usr/bin/find
 	CPP_SHARED_OUTPUT_x64=./lib/x64/libVeer.so
+	LDFLAGS=
 endif
 
 ifeq ($(DEBUG), 1)
-	CFLAGS=-O2 -std=c++20 -DDEBUG -I$(CURDIR)/cpp/include/jni/
+	CFLAGS=-fPIC -O2 -std=c++20 -DDEBUG -I$(CURDIR)/cpp/include/jni/
 else
-	CFLAGS=-O2 -std=c++20 -I$(CURDIR)/cpp/include/jni/
+	CFLAGS=-fPIC -O2 -std=c++20 -I$(CURDIR)/cpp/include/jni/
 endif
 
 JAVA_SOURCES=$(shell $(FIND) ./java/src/ -name *.java)
@@ -44,7 +46,7 @@ $(CPP_OUTPUT_DIRS_x64):
 	jar cf $@ $(JAR_FILES)
 
 ./java/lib/%.class: ./java/src/%.java
-	javac -d ./java/lib/ $^ -h ./cpp/include/generated/
+	cd ./java/src/ && javac -d ../lib/ $(patsubst java/src/%.java, ./%.java, $^) -h ../../cpp/include/generated/
 
 # Native arm build
 ./lib/arm/libVeer.so: $(CPP_OUTPUTS_arm)
@@ -55,7 +57,7 @@ $(CPP_OUTPUT_DIRS_x64):
 
 # Native x64 build
 $(CPP_SHARED_OUTPUT_x64): $(CPP_OUTPUTS_x64)
-	$(CC) -shared $^ -o $@
+	$(CC) -shared $(LDFLAGS) $^ -o $@
 
 ./cpp/lib/x64/%.o: ./cpp/src/%.cpp
 	$(CC) -c $(CFLAGS) $^ -o $@
