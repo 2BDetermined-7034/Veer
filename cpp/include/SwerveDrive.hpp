@@ -5,13 +5,9 @@
 
 class SwerveDrive {
 public:
-	SwerveDrive(JNIEnv* env, jobject obj);
+	SwerveDrive();
 
-	int myNumber;
-
-	static jclass clazz;
-	static jfieldID memoryID;
-	static jfieldID handleID;
+	int demoVariable;
 };
 
 #endif
