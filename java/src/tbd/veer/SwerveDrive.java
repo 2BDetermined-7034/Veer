@@ -1,13 +1,11 @@
 package tbd.veer;
 
 public class SwerveDrive {
-	public byte[]  nativeMemory;
+	public byte[] nativeHandle;
 
 	public SwerveDrive() {
 		nativeInit();
 	}
-
-	public native int getNativeStatus();
 
 	private native void nativeInit();
 }

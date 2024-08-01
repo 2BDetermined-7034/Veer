@@ -3,11 +3,10 @@
 
 #include <jni.h>
 
+
 class SwerveDrive {
 public:
 	SwerveDrive();
-
-	int demoVariable;
 };
 
 #endif

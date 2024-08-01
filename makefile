@@ -22,7 +22,7 @@ endif
 
 JAVA_SOURCES=$(shell $(FIND) ./java/src/ -name *.java)
 JAVA_OUTPUTS=$(JAVA_SOURCES:./java/src/%.java=./java/lib/%.class)
-JAR_FILES   =$(JAVA_OUTPUTS:./java/lib/%.class=-C ./java/lib %.class)
+JAR_FILES   =$(JAVA_OUTPUTS:./java/lib/%.class=-C ./java/lib/ %.class)
 
 CPP_SOURCES    =$(shell $(FIND) ./cpp/src/ -name *.cpp)
 CPP_OUTPUTS_arm=$(CPP_SOURCES:./cpp/src/%.cpp=./cpp/lib/arm/%.o)
@@ -46,7 +46,7 @@ $(CPP_OUTPUT_DIRS_x64):
 	jar cf $@ $(JAR_FILES)
 
 ./java/lib/%.class: ./java/src/%.java
-	cd ./java/src/ && javac -d ../lib/ $(patsubst java/src/%.java, ./%.java, $^) -h ../../cpp/include/generated/
+	javac -d ./java/lib/ -sourcepath ./java/src/ $< -h ./cpp/include/generated/
 
 # Native arm build
 ./lib/arm/libVeer.so: $(CPP_OUTPUTS_arm)
@@ -75,3 +75,5 @@ clean:
 # Remove both the GNU/Linux and Windows shared library variants without complaining
 	rm -f ./lib/x64/libVeer.so
 	rm -f ./lib/x64/Veer.dll
+
+	rm -rf ./logs/
