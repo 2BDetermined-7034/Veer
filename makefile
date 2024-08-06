@@ -1,7 +1,7 @@
 DEBUG=1
 
 ifeq ($(OS), Windows_NT)
-	ARM_CC=C:\Users\Public\wpilib\2024\roborio\bin\arm-frc2024-linux-gnueabi-g++.exe
+	ARM_CC=C:/Users/Public/wpilib/2024/roborio/bin/arm-frc2024-linux-gnueabi-g++.exe
 	CC=g++.exe
 	FIND=C:/msys64/usr/bin/find.exe
 	CPP_SHARED_OUTPUT_x64=./lib/x64/Veer.dll
@@ -15,9 +15,9 @@ else
 endif
 
 ifeq ($(DEBUG), 1)
-	CFLAGS=-fPIC -O2 -std=c++20 -DDEBUG -I$(CURDIR)/cpp/include/jni/
+	CFLAGS=-fPIC -O2 -std=c++20 -DDEBUG "-I$(CURDIR)/cpp/include/jni/"
 else
-	CFLAGS=-fPIC -O2 -std=c++20 -I$(CURDIR)/cpp/include/jni/
+	CFLAGS=-fPIC -O2 -std=c++20 "-I$(CURDIR)/cpp/include/jni/""
 endif
 
 JAVA_SOURCES=$(shell $(FIND) ./java/src/ -name *.java)
