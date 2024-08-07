@@ -7,4 +7,6 @@
 JNIEXPORT void JNICALL Java_tbd_veer_SwerveDrive_nativeInit(JNIEnv* env, jobject obj) {
 	jptr<SwerveDrive> swerveHandle;
 	swerveHandle.alloc(env, obj, "nativeHandle", 1);
+
+	*swerveHandle.data() = SwerveDrive(env, obj);
 }

@@ -1,7 +1,7 @@
 #ifndef VEER_JPTR_HPP
 #define VEER_JPTR_HPP
 
-#include <jni.h>
+#include "jArrayFunctions.hpp"
 #include <iterator>
 
 /*
@@ -16,7 +16,7 @@
  * https://en.cppreference.com/w/cpp/named_req/MoveConstructible
  * https://en.cppreference.com/w/cpp/named_req/MoveAssignable
  */
-template <typename T>
+template <typename T, class ArrayType = jbyteArray>
 class jptr {
 public:
 // Constructors, assignment operators, and deconstructor
@@ -59,7 +59,7 @@ public:
 
 	~jptr() {
 		if (jhandle) {
-			env->ReleaseByteArrayElements(jhandle, (jbyte*)ptr, 0);
+			jArrayFunctions<ArrayType>::releaseArrayElements(env, jhandle, (void*)ptr);
 			jhandle = NULL;
 			ptr = nullptr;
 			count = 0;
@@ -69,25 +69,25 @@ public:
 // Creation functions
 	void alloc(JNIEnv* env, jobject obj, const char* handleName, size_t count) {
 		jclass clazz = env->GetObjectClass(obj);
-		jfieldID handleID = env->GetFieldID(clazz, handleName, "[B");
+		jfieldID handleID = jArrayFunctions<ArrayType>::getFieldID(env, clazz, handleName);
 
-		jbyteArray memory = env->NewByteArray(sizeof(T) * count);
+		ArrayType memory = jArrayFunctions<ArrayType>::newArray(env, count * sizeof(T));
 		env->SetObjectField(obj, handleID, memory);
 
 		this->env = env;
-		this->jhandle = (jbyteArray)env->GetObjectField(obj, handleID);
-		this->ptr = (T*)env->GetByteArrayElements(this->jhandle, nullptr);
+		this->jhandle = (ArrayType)env->GetObjectField(obj, handleID);
+		this->ptr = (T*)jArrayFunctions<ArrayType>::getArrayElements(env, this->jhandle);
 		this->count = count;
 	}
 
 	void load(JNIEnv* env, jobject obj, const char* handleName) {
 		jclass clazz = env->GetObjectClass(obj);
-		jfieldID handleID = env->GetFieldID(clazz, handleName, "[B");
+		jfieldID handleID = jArrayFunctions<ArrayType>::getFieldID(env, clazz, handleName);
 
 		this->env = env;
-		this->jhandle = (jbyteArray)env->GetObjectField(obj, handleID);
-		this->ptr = (T*)env->GetByteArrayElements(this->jhandle, nullptr);
-		this->count = env->GetArrayLength(this->jhandle) / sizeof(T);
+		this->jhandle = (ArrayType)env->GetObjectField(obj, handleID);
+		this->ptr = (T*)jArrayFunctions<ArrayType>::getArrayElements(env, this->jhandle);
+		this->count = jArrayFunctions<ArrayType>::getArraySize(env, this->jhandle) / sizeof(T);
 	}
 
 // Operator overloads
@@ -103,7 +103,8 @@ public:
 		return sizeof(T) * count;
 	}
 
-	inline T& operator[](size_t i) const {
+	template <typename I = size_t> requires std::is_integral_v<T>
+	inline T& operator[](I i) const {
 		return ptr[i];
 	}
 
@@ -130,7 +131,7 @@ public:
 
 private:
 	JNIEnv*     env;
-	jbyteArray  jhandle;
+	ArrayType  jhandle;
 	T*          ptr;
 	size_t      count;
 };
