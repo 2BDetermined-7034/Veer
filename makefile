@@ -23,6 +23,8 @@ endif
 JAVA_SOURCES=$(shell $(FIND) ./java/src/ -name *.java)
 JAVA_OUTPUTS=$(JAVA_SOURCES:./java/src/%.java=./java/lib/%.class)
 JAR_FILES   =$(JAVA_OUTPUTS:./java/lib/%.class=-C ./java/lib/ %.class)
+JAVA_DEPS   =$(shell cat dependencies.txt)
+JAR_DEPS    ="$(shell echo $(JAVA_DEPS:%=./lib/%.jar) | tr ' ' ';')"
 
 CPP_SOURCES    =$(shell $(FIND) ./cpp/src/ -name *.cpp)
 CPP_OUTPUTS_arm=$(CPP_SOURCES:./cpp/src/%.cpp=./cpp/lib/arm/%.o)
@@ -32,7 +34,7 @@ CPP_SOURCE_DIRS    =$(shell $(FIND) ./cpp/src/ -type d)
 CPP_OUTPUT_DIRS_arm=$(CPP_SOURCE_DIRS:./cpp/src/%=./cpp/lib/arm/%) ./lib/arm
 CPP_OUTPUT_DIRS_x64=$(CPP_SOURCE_DIRS:./cpp/src/%=./cpp/lib/x64/%) ./lib/x64
 
-default: $(CPP_OUTPUT_DIRS_arm) $(CPP_OUTPUT_DIRS_x64) ./lib/Veer.jar ./lib/arm/libVeer.so $(CPP_SHARED_OUTPUT_x64)
+default: ./lib/Veer.jar ./lib/arm/libVeer.so $(CPP_OUTPUT_DIRS_arm) $(CPP_OUTPUT_DIRS_x64) $(CPP_SHARED_OUTPUT_x64)
 
 # Subdirectory constructor
 $(CPP_OUTPUT_DIRS_arm):
@@ -46,7 +48,7 @@ $(CPP_OUTPUT_DIRS_x64):
 	jar cf $@ $(JAR_FILES)
 
 ./java/lib/%.class: ./java/src/%.java
-	javac -d ./java/lib/ -sourcepath ./java/src/ $< -h ./cpp/include/generated/
+	javac -cp $(JAR_DEPS) -d ./java/lib/ -sourcepath ./java/src/ $< -h ./cpp/include/generated/
 
 # Native arm build
 ./lib/arm/libVeer.so: $(CPP_OUTPUTS_arm)

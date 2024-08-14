@@ -19,23 +19,30 @@ public:
 		angleMotor  = 4,
 
 		speed       = 0,
-		angle       = 8
+		angle       = 8,
+
+		odometryVelocity    = 17,
+		odometryAngularVelocity = 19,
+		odometryPosition    = 20,
+		odometryOrientation = 23
 	};
 
 	void update(JNIEnv* env, jobject obj);
 
+	Eigen::Vector2d velocity;
+	double          angularVelocity;
 	Eigen::Vector3d position;
-	Eigen::Vector3d velocity;
 	Eigen::Vector3d orientation;
-	Eigen::Vector3d angularVelocity;
 
 	struct SwerveModule {
 		double prevAngleAngle, prevDriveAngle;
-		const Eigen::Vector2d tangent;
+		Eigen::Vector2d position;   // Location relative to the robot pivot point
+		Eigen::Vector2d normal;	    // Normalized position
+		Eigen::Vector2d tangent;    // Tangent to position (NOT NORMALIZED)
 	} modules[4];
 
-	const Eigen::Vector2d wheelDistance;
-	const double wheelRadius;
+	Eigen::Vector2d wheelDistance;
+	double wheelRadius;
 };
 
 #endif

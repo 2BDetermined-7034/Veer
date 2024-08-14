@@ -1,5 +1,7 @@
 package tbd.veer;
 
+import edu.wpi.first.wpilibj.*;
+
 public class SwerveDrive {
 	public static final class TransferIndices {
 		public static final int
@@ -12,7 +14,12 @@ public class SwerveDrive {
 			angleMotor  = 4,
 
 			speed       = 0,
-			angle       = 8;
+			angle       = 8,
+
+			odometryVelocity    = 17,
+			odometryAngularVelocity = 19,
+			odometryPosition    = 20,
+			odometryOrientation = 23;
 	}
 	
 	private byte[]      nativeHandle;
@@ -22,9 +29,14 @@ public class SwerveDrive {
 		nativeInit();
 	}
 
+	public void update() {
+		
+	}
+
 	public double getMotorInfo(int index) {
 		return transferRegion[index];
 	}
 
 	private native void nativeInit();
+	private native void nativeUpdate();
 }
