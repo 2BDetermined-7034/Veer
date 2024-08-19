@@ -107,6 +107,17 @@ def get_online_vendor_deps():
 				#shell=True
 			#)
 			perform_download(url)
+		
+		for entry in data['jniDependencies']:
+			groupId = str(entry['groupId'])
+			artifactId = str(entry['artifactId'])
+			version = str(entry['version'])
+
+			url = gav_to_url(base, groupId, artifactId, version, "pom")
+			print("jni url = ", url)
+			perform_download(url)
+
+			
 
 def perform_download(url):
 	'''
