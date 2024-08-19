@@ -109,11 +109,14 @@ def get_online_vendor_deps():
 			perform_download(url)
 		
 		for entry in data['jniDependencies']:
+			if 'isJar' in entry and entry['isJar'] == False:
+				print("Spec says %s this isn't a .jar file, moving on" % artifactId)
+				continue
 			groupId = str(entry['groupId'])
 			artifactId = str(entry['artifactId'])
 			version = str(entry['version'])
 
-			url = gav_to_url(base, groupId, artifactId, version, "pom")
+			url = gav_to_url(base, groupId, artifactId, version, "jar")
 			print("jni url = ", url)
 			perform_download(url)
 
