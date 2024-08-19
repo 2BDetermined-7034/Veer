@@ -23,8 +23,7 @@ endif
 JAVA_SOURCES=$(shell $(FIND) ./java/src/ -name *.java)
 JAVA_OUTPUTS=$(JAVA_SOURCES:./java/src/%.java=./java/lib/%.class)
 JAR_FILES   =$(JAVA_OUTPUTS:./java/lib/%.class=-C ./java/lib/ %.class)
-JAVA_DEPS   =$(shell cat dependencies.txt)
-JAR_DEPS    ="$(shell echo $(JAVA_DEPS:%=./lib/%.jar) | tr ' ' ';')"
+JAR_DEPS    ="$(shell $(FIND) ./lib/ -name *.jar | tr '\n' ';')"
 
 CPP_SOURCES    =$(shell $(FIND) ./cpp/src/ -name *.cpp)
 CPP_OUTPUTS_arm=$(CPP_SOURCES:./cpp/src/%.cpp=./cpp/lib/arm/%.o)
