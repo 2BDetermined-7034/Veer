@@ -10,6 +10,8 @@ import subprocess
 import os
 import json
 import requests
+import zipfile
+import shutil
 
 depdir = ""
 
@@ -109,18 +111,53 @@ def get_online_vendor_deps():
 			perform_download(url)
 		
 		for entry in data['jniDependencies']:
-			if 'isJar' in entry and entry['isJar'] == False:
-				print("Spec says %s this isn't a .jar file, moving on" % artifactId)
+			if 'isJar' == False in entry and entry['isJar'] == False:
+				print("Spec says %s this is a .jar file, moving on" % artifactId)
 				continue
 			groupId = str(entry['groupId'])
 			artifactId = str(entry['artifactId'])
 			version = str(entry['version'])
+			validPlatforms = entry['validPlatforms']
 
-			url = gav_to_url(base, groupId, artifactId, version, "jar")
-			print("jni url = ", url)
-			perform_download(url)
+			for platform in validPlatforms:
+				system = str
+				arch = str
 
-			
+				if str(platform).find("windows") != -1:
+					system = "windows"
+				elif str(platform).find("linux") != -1:
+					system = "linux"
+				else:
+					break
+
+				url = base + groupId.replace(".", "/") + "/" + artifactId + "/" + version + "/" + artifactId + "-" + version + "-" + platform + ".zip"
+				print("jni url = ", url)
+				perform_download(url)
+
+				file = zipfile.ZipFile("./lib/" + artifactId + "-" + version + "-" + platform + ".zip")
+				
+				arch = str(platform).split(system)[1]
+
+				path = zipfile.Path(file, system + "/" + arch + "/shared/")
+				for sub in path.iterdir():
+					if (arch == "x86-64"):
+						file.extract(system + "/" + arch + "/shared/" + sub.name, "./lib/x64/")
+						shutil.move("./lib/x64/" + system + "/" + arch + "/shared/" + sub.name, "./lib/x64/" + sub.name)
+					elif (arch == "athena"):
+						file.extract(system + "/" + arch + "/shared/" + sub.name, "./lib/arm/")
+						shutil.move("./lib/arm/" + system + "/" + arch + "/shared/" + sub.name, "./lib/arm/" + sub.name)
+
+
+				if (arch == "x86-64"):
+					shutil.rmtree("./lib/x64/" + system)
+				elif (arch == "athena"):
+					shutil.rmtree("./lib/arm/" + system)
+
+				file.close()
+
+				os.remove("./lib/" + artifactId + "-" + version + "-" + platform + ".zip")
+
+
 
 def perform_download(url):
 	'''
